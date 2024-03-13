@@ -1,11 +1,15 @@
 
 const knex = require('knex')
-const port = 3000
 const express = require('express')
 const body_parser = require('body-parser')
 const path = require('path')
+const cors = require('cors')
+const config = require('config')
 
 const app = express() // creates my server
+
+app.use(cors())
+
 app.use(body_parser.json()) // will help to get the body of the request 
 
 app.use(express.static(path.join('.', '/static/'))) // allows browsing to my static folder
@@ -118,8 +122,8 @@ app.post('/api/employees-create6', async (request, response) => {
 })
 
 // start
-app.listen(port, () => {
-    console.log(`==== express server is up on port ${port}`);
+app.listen(config.server.port, () => {
+    console.log(`==== express server is up on port ${config.server.port}`);
 })
 
 const data_base = knex({
@@ -131,3 +135,4 @@ const data_base = knex({
         database: 'postgres'
     }
 })
+
