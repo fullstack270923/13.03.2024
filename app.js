@@ -129,10 +129,10 @@ app.listen(config.server.port, () => {
 const data_base = knex({
     client: 'pg',
     connection: {
-        host: 'localhost',
-        user: 'postgres',
-        password: 'admin',
-        database: 'postgres'
+        host: config.db_connection.host,
+        user: config.db_connection.user,
+        password: onfig.db_connection.admin,
+        database: onfig.db_connection.postgres
     }
 })
 
