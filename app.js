@@ -131,8 +131,8 @@ const data_base = knex({
     connection: {
         host: config.db_connection.host,
         user: config.db_connection.user,
-        password: onfig.db_connection.admin,
-        database: onfig.db_connection.postgres
+        password: config.db_connection.admin,
+        database: config.db_connection.postgres
     }
 })
 
