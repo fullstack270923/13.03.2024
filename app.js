@@ -15,6 +15,17 @@ app.use(body_parser.json()) // will help to get the body of the request
 
 app.use(express.static(path.join('.', '/static/'))) // allows browsing to my static folder
 
+// const loggerMiddleware = (request, response, next) => {
+//     logger.info(`${request.method} ${request.url}`)
+//     response.on('finish', () => {
+//         // Now you might log something more useful about the response, like its status code.
+//         logger.info(`Response sent with status code: ${response.statusCode} ${response.body}`);
+//     });
+//     next();
+// }
+
+// app.use(loggerMiddleware)
+
 // app.get('/getall.html',  async (request, response) => {
 //     response.sendFile(path.join(__dirname, '/static/get_all.html'))
 // })
