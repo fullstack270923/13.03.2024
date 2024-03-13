@@ -32,6 +32,7 @@ app.get('/api/employees/:id', async (request, response) => {
     // add try catch
     // if /:id is zero or not a number then return 400 with the error
     // also log.error the error
+    // hint: typeof value === 'number' && !isNaN(value);
     const id = request.params.id
     const employees = await data_base.raw(`select * from company where id = ${id}`)
     employees.rows = employees.rows.map(e => {
