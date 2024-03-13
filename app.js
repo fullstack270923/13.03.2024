@@ -5,6 +5,7 @@ const body_parser = require('body-parser')
 const path = require('path')
 const cors = require('cors')
 const config = require('config')
+const logger = require('./logger/my_logger')
 
 const app = express() // creates my server
 
@@ -64,8 +65,8 @@ app.patch('/api/employees/:id', async (request, response) => {
     //const updated_employee = request.body
     //const employee_db = await data_base.raw(`select * from company where id = ${id}`)
     //const result = await data_base.raw(`UPDATE company set name=?,age=?,address=?,salary=? where id=?`,
-        //[updated_employee.name ? updated_employee.name : employee_db.name, 
-         //updated_employee.age, updated_employee.address ? updated_employee.address : '', updated_employee.salary, id])    
+    //[updated_employee.name ? updated_employee.name : employee_db.name, 
+    //updated_employee.age, updated_employee.address ? updated_employee.address : '', updated_employee.salary, id])    
 
     // name? query.push(`name='${name}'`) : null
     // address? query.push(`address='${address}'`) : null
@@ -94,11 +95,39 @@ app.delete('/api/employees-delete-table', async (request, response) => {
 })
 
 app.post('/api/employees-create-table', async (request, response) => {
-    await data_base.raw(`CREATE TABLE company (id SERIAL PRIMARY KEY, name TEXT NOT NULL UNIQUE,` +
-        `age INT NOT NULL,` +
-        `address CHAR(50),` +
-        `salary REAL);`);
-    response.status(201).json({ status: "table-created" })
+    try {
+        await data_base.raw(`CREATE TABLE company (id SERIAL PRIMARY KEY, name TEXT NOT NULL UNIQUE,` +
+            `age INT NOT NULL,` +
+            `address CHAR(50),` +
+            `salary REAL);`);
+        response.status(201).json({ status: "table-created" })
+    }
+    catch (e) {
+        const date = new Date();
+        const formatter = new Intl.DateTimeFormat('en', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false // Use 24-hour clock
+        });
+        const formattedDate = formatter.format(date).replace(/,/, '');
+        console.log(`${formattedDate}.${date.getMilliseconds().toString().padStart(3, '0')} Error in employees-create-table. error = ${e} `);
+        if (e.message.includes('already exists')) {
+            logger.error(`Error in employees-create-table. error = ${e.message}.`)
+            response.status(400).json({ status: "Failed to create table", error: e.message.replaceAll("\"", "'") })
+        }
+        else {
+            const case_number = Math.floor(Math.random() * 1000000) + 1000000
+            logger.error(`Case number (${case_number}): Error in employees-create-table. ${e.message}.`)
+            response.status(500).json({
+                status: "Failed to create table", error: `Internal error. please contact support ${case_number}`,
+                time: Date()
+            })
+        }
+    }
 })
 
 app.post('/api/employees-create6', async (request, response) => {
@@ -123,7 +152,7 @@ app.post('/api/employees-create6', async (request, response) => {
 
 // start
 app.listen(config.server.port, () => {
-    console.log(`==== express server is up on port ${config.server.port}`);
+    logger.info(`==== express server is up on port ${config.server.port}`);
 })
 
 const data_base = knex({
@@ -131,8 +160,9 @@ const data_base = knex({
     connection: {
         host: config.db_connection.host,
         user: config.db_connection.user,
-        password: config.db_connection.admin,
-        database: config.db_connection.postgres
+        password: config.db_connection.password,
+        database: config.db_connection.database
     }
 })
+
 
