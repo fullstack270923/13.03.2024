@@ -36,6 +36,7 @@ app.get('/api/employees', async (request, response) => {
         e.address = e.address.trimEnd();
         return e;
     })
+    logger.debug(`app.get /api/employees number of records: ${employees.rows.length}`)
     response.status(200).json(employees.rows)
 })
 
@@ -54,10 +55,27 @@ app.get('/api/employees/:id', async (request, response) => {
 })
 
 app.post('/api/employees', async (request, response) => {
-    const new_employee = request.body
-    await data_base.raw(`INSERT INTO company (name,age,address,salary) VALUES (?, ?, ?, ?);`,
-        [new_employee.name, new_employee.age, new_employee.address, new_employee.age])
-    response.status(201).json({ result: "new employee created" })
+    try {
+        const new_employee = request.body
+        // await data_base.raw(`INSERT INTO company (name,age,address,salary) VALUES (?, ?, ?, ?);`,
+        //     [new_employee.name, new_employee.age, new_employee.address, new_employee.age])
+        delete new_employee.id
+        console.log(new_employee);
+        const result_ids = await data_base('company').insert(new_employee).returning('id');
+        console.log(result_ids[0]);
+
+        const id = result_ids[0].id
+        response.status(201).json({ new: { id, ...new_employee}, url: `/api/employees/${id}` })
+        // ...new_employee ==>   name: "Paul!", age: 32, address: "California!", salary: 20000
+        // {...new_employee} ==>  { name: "Paul!", age: 32, address: "California!", salary: 20000 }
+        // {id: result_ids[0].id, ...new_employee} ==>  
+        //            { id: 14, name: "Paul!", age: 32, address: "California!", salary: 20000 }
+        // /api/employees/8
+    }
+    catch (e) {
+        logger.error(`Error in api post /api/employee. error = ${e.message}.`)
+        response.status(400).json({ status: "Failed to insert new employee", error: e.message.replaceAll("\"", "'") })
+    }
 })
 
 app.put('/api/employees/:id', async (request, response) => {
@@ -89,7 +107,9 @@ app.patch('/api/employees/:id', async (request, response) => {
     // age? query.push(`age=${age}`) : null
 
     if (query.length > 0) {
-        await data_base.raw(`UPDATE company set ${query.join(', ')} where id=${id}`)
+        const query = `UPDATE company set ${query.join(', ')} where id=${id}`
+        logger.debug(`app.patch employee ${query}`)
+        await data_base.raw(query)
         response.status(200).json({ result: "employee patched" })
         return
     }
@@ -111,6 +131,7 @@ app.delete('/api/employees-delete-table', async (request, response) => {
 
 app.post('/api/employees-create-table', async (request, response) => {
     try {
+        logger.debug(request)
         await data_base.raw(`CREATE TABLE company (id SERIAL PRIMARY KEY, name TEXT NOT NULL UNIQUE,` +
             `age INT NOT NULL,` +
             `address CHAR(50),` +
